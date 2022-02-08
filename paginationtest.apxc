@@ -1,0 +1,40 @@
+@isTest
+public class PaginationLeadCtrl_Test {
+
+    @TestSetup
+     static void testDummy()
+     {
+         List<Lead> lstLead=new List<Lead>();
+         for(Integer i=0;i<200;i++)
+         {
+             Lead l=new Lead();
+             l.FirstName='test';
+             l.LastName=''+i;
+             l.Company='test'+i;
+             l.Status='New';
+             l.LeadSource='Web';
+             lstLead.add(l);
+         }
+         if(lstLead.size()>0)
+             insert lstLead;
+         
+         
+     }
+    
+     static testmethod void testLead()
+     {
+          
+         PaginationLeadCtrl.fetchLeadWrapper();
+         List<Lead> ll=[select id from Lead limit 1];
+         List<String> llist=new List<String>{ll[0].Id};
+         PaginationLeadCtrl.updateRecord(llist);
+     }
+    
+    static testmethod void testLeadBatch()
+     {
+          Test.startTest() ;
+         Id batchId=PaginationLeadCtrl.executeBatchJob();
+         PaginationLeadCtrl.getBatchJobStatus(batchId);
+         Test.stopTest();
+     }
+}

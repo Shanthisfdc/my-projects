@@ -1,0 +1,26 @@
+public class LeadBatchController implements Database.Batchable<Sobject>
+{
+     public Database.QueryLocator start(Database.BatchableContext bc)
+     {
+      
+      return Database.getQueryLocator('Select id,FirstName,Status,LeadSource,LastName From Lead '+(Test.isRunningTest()?' LIMIT 200':''));
+    }
+
+    public void execute(Database.BatchableContext bc,List<Sobject> scope)
+    {
+        List<Lead> leadlist=(List<Lead>)scope;
+        List<Lead> lstUpdate = new List<Lead>();
+        for(Lead l : leadlist){
+            l.Status = 'Closed - Converted'; 
+            lstUpdate.add(l);
+        }
+        if(lstUpdate.size() > 0){
+            update lstUpdate;
+        }
+    }
+
+     public void finish(Database.BatchableContext bc)
+    {
+
+    }
+}

@@ -1,0 +1,49 @@
+public class PaginationLeadCtrl {
+    //To get the List of Lead records based on Status as New
+    @AuraEnabled 
+    public static List<leadListWrapper> fetchLeadWrapper(){     
+        List<leadListWrapper> lstLeadListWrapper = new List<leadListWrapper>();
+        for(Lead l : [Select id,FirstName,Status,LeadSource,OwnerId,Owner.Name,LastName
+                           From Lead
+                           Limit 50000]){
+                               lstLeadListWrapper.add(new leadListWrapper(false,l));
+                           } 
+        return lstLeadListWrapper; 
+    }
+    public class leadListWrapper {
+        @AuraEnabled public boolean isChecked {get;set;}
+        @AuraEnabled public  Lead objLead{get;set;}
+        public leadListWrapper(boolean isChecked, Lead objLead){
+            this.isChecked = isChecked;
+            this.objLead = objLead;
+        }
+    }
+    
+    // Update Lead Status field for selected records
+    @AuraEnabled
+    public static void updateRecord(List <String> lstRecordId) {
+        List<Lead> lstUpdate = new List<Lead>();
+        for(Lead l : [SELECT id,Status FROM Lead WHERE Id IN : lstRecordId]){
+            l.Status = 'Closed - Converted'; 
+            lstUpdate.add(l);
+        }
+        if(lstUpdate.size() > 0){
+            update lstUpdate;
+        }
+    }
+    
+    //To run the batch job for updating the Lead status field 
+    @AuraEnabled
+    public static Id executeBatchJob(){
+        
+        Id batchJobId = Test.isRunningTest()?Database.executeBatch(new LeadBatchController()): Database.executeBatch(new LeadBatchController(), 1);
+        return batchJobId;
+    }
+
+    //To get the batch job status
+    @AuraEnabled
+    public static AsyncApexJob getBatchJobStatus(Id jobID){
+        AsyncApexJob jobInfo = [SELECT Status, NumberOfErrors,JobItemsProcessed,TotalJobItems FROM AsyncApexJob WHERE Id = :jobID];
+        return jobInfo;
+    }
+}
